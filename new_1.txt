@@ -1,0 +1,154 @@
+import java.util.*;
+
+public class EdmondKarp {
+    public static void main(String[] args) {
+        int N = 2000;
+        int R = 10;
+        int Z = 0;
+        int arr [][] = new int[N][N];
+        arr = myArr(N, R, Z);
+//        for(int i = 0 ; i < N ; i++){
+//            for(int j = 0 ; j < N ; j++){
+//                System.out.print(arr[i][j] + " ");
+//            }
+//            System.out.println();
+//        }
+        int node = 0;
+        for(int i = 0; i < N; i++) {
+            for(int j = 0; j < N; j++) {
+                if(arr[i][j] != 0) {
+                    node++;
+                }
+            }
+        }
+        List<Edge>[] graph = createGraph(node);
+        for(int i = 0; i < N; i++) {
+            for(int j = 0; j < N; j++) {
+                if(arr[i][j] != 0) {
+                    addEdge(graph, i, j, arr[i][j]);
+                }
+            }
+        }
+        Date d = new Date();
+        System.out.println("EK " + maxFlow(graph, 0, N-1));
+        System.out.println("EK " + (new Date().getTime() - d.getTime()));
+        d = new Date();
+        System.out.println("FF " + maxFlowFF(arr, 0, N - 1));
+        System.out.println("FF " + (new Date().getTime() - d.getTime()));
+    }
+
+    static class Edge {
+        int s, t, rev, cap, f;
+        public Edge(int s, int t, int rev, int cap) {
+            this.s = s;
+            this.t = t;
+            this.rev = rev;
+            this.cap = cap;
+        }
+    }
+
+    public static List<Edge>[] createGraph(int nodes) {
+        List<Edge>[] graph = new List[nodes];
+        for (int i = 0; i < nodes; i++)
+            graph[i] = new ArrayList<Edge>();
+        return graph;
+    }
+
+    public static void addEdge(List<Edge>[] graph, int s, int t, int cap) {
+        graph[s].add(new Edge(s, t, graph[t].size(), cap));
+        graph[t].add(new Edge(t, s, graph[s].size() - 1, 0));
+    }
+
+    public static int maxFlow(List<Edge>[] graph, int s, int t) {
+        int flow = 0;
+        int[] q = new int[graph.length];//количество точек
+        while (true) {
+            int qt = 0;
+            q[qt++] = s;
+            Edge[] pred = new Edge[graph.length];
+            for (int qh = 0; qh < qt && pred[t] == null; qh++) {
+                int cur = q[qh];
+                for (Edge e : graph[cur]) {
+                    if (pred[e.t] == null && e.cap > e.f) {
+                        pred[e.t] = e;
+                        q[qt++] = e.t;
+                    }
+                }
+            }
+            if (pred[t] == null)
+                break;
+            int df = Integer.MAX_VALUE;
+            for (int u = t; u != s; u = pred[u].s)
+                df = Math.min(df, pred[u].cap - pred[u].f);
+            for (int u = t; u != s; u = pred[u].s) {
+                pred[u].f += df;
+                graph[pred[u].t].get(pred[u].rev).f -= df;
+            }
+            flow += df;
+        }
+        return flow;
+    }
+
+    static int findPath(int[][] cap, boolean[] vis, int u, int t, int f) {
+        if (u == t)
+            return f;
+        vis[u] = true;
+        for (int v = 0; v < vis.length; v++)
+            if (!vis[v] && cap[u][v] > 0) {
+                int df = findPath(cap, vis, v, t, Math.min(f, cap[u][v]));
+                if (df > 0) {
+                    cap[u][v] -= df;
+                    cap[v][u] += df;
+                    return df;
+                }
+            }
+        return 0;
+    }
+
+    public static int maxFlowFF(int[][] cap, int s, int t) {
+        for (int flow = 0;;) {
+            int df = findPath(cap, new boolean[cap.length], s, t, Integer.MAX_VALUE);
+            if (df == 0)
+               return flow;
+            flow += df;
+        }
+    }
+
+    public static int[][] myArr(int N, int R, int Z) {
+        int arr[][] = new int[N][N];
+        Random r = new Random();
+        if (Z == 0) {
+            for(int i = 0 ; i < N ; i++){
+                for(int j = i ; j < N ; j++){
+                    if(i == j || i == N-1){
+                        arr[i][j] = 0;
+                    }else{
+                        arr[i][j] = r.nextInt(R);
+                    }
+                }
+            }
+        } else if (Z == 1) {
+            for(int i = 0 ; i < N ; i++){
+                for(int j = 0 ; j < N ; j++){
+                    if(i == j || i == N-1){
+                        arr[i][j] = 0;
+                    }else if (arr[j][i] == 0) {
+                        arr[i][j] = r.nextInt(R);
+                    }
+                }
+            }
+        } else if (Z == 2) {
+            for(int i = 0 ; i < N ; i++){
+                for(int j = 0 ; j < N ; j++){
+                    if(i == j || i == N-1){
+                        arr[i][j] = 0;
+                    }else{
+                        arr[i][j] = r.nextInt(R);
+                    }
+                }
+            }
+        }
+        return arr;
+    }
+
+}
